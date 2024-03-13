@@ -5,23 +5,24 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 
-const Regions = () => {
+const Regions = (props) => {
     let [regions, setRegions] = useState([]);
     let labels = []
     let values = []
     useEffect(() => {
-        axios.get('http://localhost:8000/api/v1/dash/get-regions')
-            .then(response => {
-                setRegions(response.data)
-                console.log(response.data)
-            }).catch(error => {
-                console.log(error)
-            })
-
-    }, [])
+        if (props.data) {
+            setRegions(props.data);
+        } else {
+            axios.get('http://localhost:8000/api/v1/dash/get-regions')
+                .then(response => {
+                    setRegions(response.data)
+                }).catch(error => {
+                    console.log(error)
+                })
+        }
+    }, [props.data]);
 
     let str = JSON.stringify(regions);
-    console.log(str)
     str = str.replace('"":', '"unknown":');
     regions = JSON.parse(str);
 
@@ -31,7 +32,7 @@ const Regions = () => {
         values.push(value);
     });
 
-   
+
 
     const data = {
         labels: labels,
@@ -60,16 +61,16 @@ const Regions = () => {
                     },
                     scales: {
                         x: {
-                          grid: {
-                            display: false,
-                          },
+                            grid: {
+                                display: false,
+                            },
                         },
                         y: {
                             grid: {
-                              display: false,
+                                display: false,
                             },
-                          },
-                      },
+                        },
+                    },
                 }}
 
             />

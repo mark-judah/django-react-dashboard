@@ -2,10 +2,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Filter from "../assets/filter.svg"
 import PersonIcon from "../assets/person.svg"
-import Source from "../assets/news.png"
-import Country from "../assets/country.png"
-import Region from "../assets/region.png"
-import Year from "../assets/year.png"
 import AdminNav from "../components/AdminNav";
 import Topics from "../components/Topics";
 import SourcesRadar from "../components/SourcesRadar";
@@ -17,26 +13,137 @@ import Years from "../components/Years";
 import Pestle from "../components/Pestle";
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
+import QuickStats from "../components/QuickStats";
 const DashboardHome = () => {
-    let coverage_data = []
-    let [quickStats, setQuickStats] = useState([]);
+
+    const [values, setValues] = useState([]);
+    let [filterTopics, setFilterTopics] = useState();
+    let [filterLikelyhoodRelevance, setFilterLikelyhoodRelevance] = useState();
+    let [filterIntensity, setFilterIntensity] = useState();
+    let [filterCountries, setFilterCountries] = useState();
+    let [filterRegions, setFilterRegions] = useState();
+    let [filterYears, setFilterYears] = useState();
+    let [filterSectors, setFilterSectors] = useState();
+    let [filterPestle, setFilterPestle] = useState();
+
+    let filters = ['end_year', 'topic', 'sector', 'region', 'pestle', 'source', 'country']
+    const [checkedState, setCheckedState] = useState(
+        new Array(filters.length).fill(false)
+    );
+    const handleOnChange = (position) => {
+        const updatedCheckedState = checkedState.map((item, index) =>
+            index === position ? !item : item
+        );
+        setCheckedState(updatedCheckedState);
+        console.log(updatedCheckedState)
+    }
+
+    let [allData, setAllData] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/v1/dash/get-quick-stats')
+        axios.get('http://127.0.0.1:8000/api/v1/dash/get-all')
             .then(response => {
-                setQuickStats(response.data)
-                console.log(response.data)
+                setAllData(response.data)
             }).catch(error => {
                 console.log(error)
             })
 
     }, [])
 
-    Object.entries(quickStats).forEach(([key, value]) => {
-        coverage_data.push(key);
-        coverage_data.push(value);
+    console.log(allData)
+    const options = [
+        "2016",
+        "oil",
+        "Energy",
+        "OPEC",
+        "Redux",
+    ];
+    const handleChange = (e, filter) => {
+        setValues({ ...values, [filter]: e.target.value });
+        console.log(values)
+    };
 
-    });
+    const applyFilters = (url) => {
+        let data = {
+            filters: values
+        };
+        console.log(url)
+        axios.post(`http://127.0.0.1:8000/api/v1/dash/${url}`, data)
+            .then(response => {
+                switch (url) {
+                    case 'get-topics':
+                        setFilterTopics(response.data)
+                        break;
+                    case 'get-likelihood-relevance-sources':
+                        setFilterLikelyhoodRelevance(response.data)
+                        break;
+                    case 'get-intensity':
+                        setFilterIntensity(response.data)
+                        break;
+                    case 'get-countries':
+                        setFilterCountries(response.data)
+                        break;
+                    case 'get-regions':
+                        setFilterRegions(response.data)
+                        break;
+                    case 'get-years':
+                        setFilterYears(response.data)
+                        break;
+                    case 'get-sectors':
+                        setFilterSectors(response.data)
+                        break;
+                    case 'get-pestle':
+                        setFilterPestle(response.data)
+                        break;
+                }
+                console.log(response.data)
+            }).catch(error => {
+                console.log(error)
+            })
+
+    }
+
+
+    const FilterPopup = (props) => {
+        return (
+            <div>
+                <p className="text-[#9F3400]">Select filters to apply</p>
+                {filters.map((item, index) => {
+                    return (
+                        <div className="text-[#802300]">
+                            <div className="p-3">
+                                <input
+                                    type="checkbox"
+                                    id={`custom-checkbox-${item}`}
+                                    name={item}
+                                    value={item}
+                                    checked={checkedState[index]}
+                                    onChange={() => handleOnChange(index)}
+                                />
+                                <label className="p-2" htmlFor={`custom-checkbox-${item}`}>{item}</label>
+                            </div>
+                            {checkedState[index] ? (
+                                <select value={values[item]} onChange={(e) => handleChange(e, item)}
+                                    className="p-2 rounded-xl">
+                                    {allData[item].map((option, index) => {
+                                        return (
+                                            <option key={index}>
+                                                {option}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            ) : null}
+
+                        </div>
+                    );
+                })}
+                <div className="flex justify-center p-5">
+                    <button onClick={() => applyFilters(props.url)} className="bg-[#5A1E00] p-2 text-white rounded-xl text-sm">Apply Filter(s)</button>
+                </div>
+            </div>
+        )
+    }
     return (
         <div>
             <div className="divide-y">
@@ -52,60 +159,7 @@ const DashboardHome = () => {
                     </div>
 
                     <div className="w-full">
-                        <div className="flex justify-start items-start m-8 space-x-14">
-                            <div className="flex justify-center items-center space-x-24">
-                                <div className="w-80">
-                                    <div className=" p-5 rounded-md border border-[#DFDDE1]">
-                                        <div className="p-2 bg-[#FEBF9F] rounded-md w-14">
-                                            <img src={Year} alt="" className="w-14" />
-                                        </div>
-                                        <p className="text-amber-950 mt-3 text-xl text-wrap">Most covered year</p>
-                                        <p className="text-amber-950 mt-3 text-sm text-wrap">{coverage_data[0]}</p>
-                                        <p className="text-[#FF681F] text-sm">{coverage_data[1]} Articles</p>
-
-                                    </div>
-                                </div>
-
-                                <div className="w-80">
-                                    <div className=" p-5 rounded-md border border-[#DFDDE1]">
-                                        <div className="p-2 bg-[#FEBF9F] rounded-md w-14">
-                                            <img src={Source} alt="" className="w-14" />
-                                        </div>
-                                        <p className="text-amber-950 mt-3 text-xl text-wrap">Most used source</p>
-                                        <p className="text-amber-950 mt-3 text-sm text-wrap">{coverage_data[2]}</p>
-                                        <p className="text-[#FF681F] text-sm">{coverage_data[3]} Articles</p>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-center items-center space-x-24">
-
-                                <div className="w-80">
-                                    <div className=" p-5 rounded-md border border-[#DFDDE1]">
-                                        <div className="p-2 bg-[#FEBF9F] rounded-md w-14">
-                                            <img src={Country} alt="" className="14" />
-                                        </div>
-                                        <p className="text-amber-950 mt-3 text-xl text-wrap">Most covered country</p>
-                                        <p className="text-amber-950 mt-3 text-sm text-wrap">{coverage_data[4]}</p>
-                                        <p className="text-[#FF681F] text-sm">{coverage_data[5]} Articles</p>
-
-                                    </div>
-                                </div>
-
-                                <div className="w-80">
-                                    <div className=" p-5 rounded-md border border-[#DFDDE1]">
-                                        <div className="p-2 bg-[#FEBF9F] rounded-md w-14">
-                                            <img src={Region} alt="" className="w-14" />
-                                        </div>
-                                        <p className="text-amber-950 mt-3 text-xl text-wrap">Most covered region</p>
-                                        <p className="text-amber-950 mt-3 text-sm text-wrap">{coverage_data[6]}</p>
-                                        <p className="text-[#FF681F] text-sm">{coverage_data[7]} Articles</p>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <QuickStats />
 
                         <div className="flex justify-start items-start m-8 space-x-14">
                             <div className="flex flex-col">
@@ -116,13 +170,13 @@ const DashboardHome = () => {
                                                 <p className="text-amber-950 text-sm">Topics</p>
                                                 <p className="text-amber-950 text-xs">Top 10</p>
                                             </div>
-                                            <Popup trigger={
+                                            <Popup className="w-200" trigger={
                                                 <img src={Filter} alt="" className="w-4" />
                                             } position="right center">
-                                                <div>Popup content here !!</div>
+                                                <FilterPopup url='get-topics' />
                                             </Popup>
                                         </div>
-                                        <Topics />
+                                        <Topics data={filterTopics} />
                                     </div>
                                 </div>
                             </div>
@@ -134,13 +188,13 @@ const DashboardHome = () => {
                                             <p className="text-amber-950 text-sm">Average Likelihood and Relevance.</p>
                                             <p className="text-amber-950 text-xs">Top 10 sources</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="left center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="left center">
+                                            <FilterPopup url='get-likelihood-relevance-sources' />
+                                        </Popup>
                                     </div>
-                                    <SourcesRadar />
+                                    <SourcesRadar data={filterLikelyhoodRelevance} />
                                 </div>
                             </div>
                         </div>
@@ -153,13 +207,13 @@ const DashboardHome = () => {
                                             <p className="text-amber-950 text-sm">Sectors</p>
                                             <p className="text-amber-950 text-xs">Top 10</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="right center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="right center">
+                                            <FilterPopup url='get-sectors' />
+                                        </Popup>
                                     </div>
-                                    <Sectors />
+                                    <Sectors data={filterSectors} />
                                 </div>
                             </div>
 
@@ -169,13 +223,13 @@ const DashboardHome = () => {
                                         <div className="flex flex-col">
                                             <p className="text-amber-950 text-sm">Years</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="right center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="right center">
+                                            <FilterPopup url='get-years' />
+                                        </Popup>
                                     </div>
-                                    <Years />
+                                    <Years data={filterYears} />
                                 </div>
                             </div>
 
@@ -185,13 +239,13 @@ const DashboardHome = () => {
                                         <div className="flex flex-col">
                                             <p className="text-amber-950 text-sm">Pestle</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="left center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="left center">
+                                            <FilterPopup url='get-pestle' />
+                                        </Popup>
                                     </div>
-                                    <Pestle />
+                                    <Pestle data={filterPestle} />
                                 </div>
                             </div>
                         </div>
@@ -203,13 +257,13 @@ const DashboardHome = () => {
                                         <div className="flex flex-col">
                                             <p className="text-amber-950 text-sm">Articles per Country</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="right center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="right center">
+                                            <FilterPopup url='get-countries' />
+                                        </Popup>
                                     </div>
-                                    <Countries />
+                                    <Countries data={filterCountries} />
                                 </div>
                             </div>
 
@@ -219,13 +273,13 @@ const DashboardHome = () => {
                                         <div className="flex flex-col">
                                             <p className="text-amber-950 text-sm">Articles per Region</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="left center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="left center">
+                                            <FilterPopup url='get-regions' />
+                                        </Popup>
                                     </div>
-                                    <Regions />
+                                    <Regions data={filterRegions} />
                                 </div>
                             </div>
                         </div>
@@ -237,13 +291,13 @@ const DashboardHome = () => {
                                         <div className="flex flex-col">
                                             <p className="text-amber-950 text-sm">Intensity</p>
                                         </div>
-                                         <Popup trigger={
-                                                <img src={Filter} alt="" className="w-4" />
-                                            } position="left center">
-                                                <div>Popup content here !!</div>
-                                            </Popup>
+                                        <Popup className="w-200" trigger={
+                                            <img src={Filter} alt="" className="w-4" />
+                                        } position="left center">
+                                            <FilterPopup url='get-intensity' />
+                                        </Popup>
                                     </div>
-                                    <Intensity />
+                                    <Intensity data={filterIntensity} />
                                 </div>
                             </div>
                         </div>
@@ -251,9 +305,9 @@ const DashboardHome = () => {
                     </div>
 
                 </div>
-            </div>
+            </div >
 
-        </div>
+        </div >
     );
 }
 

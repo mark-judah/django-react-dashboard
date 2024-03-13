@@ -5,24 +5,26 @@ import axios from "axios";
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-const Topics = () => {
+const Topics = (props) => {
     let [topics, setTopics] = useState([]);
     let top_ten={}
 
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/v1/dash/get-topics')
-            .then(response => {
-                setTopics(response.data)
-                console.log(response.data)
-            }).catch(error => {
-                console.log(error)
-            })
+        if (props.data) {
+            setTopics(props.data);
+        } else {
+            axios.get('http://localhost:8000/api/v1/dash/get-topics')
+                .then(response => {
+                    setTopics(response.data);
+                }).catch(error => {
+                    console.log(error);
+                });
+        }
+    }, [props.data]);
 
-    }, [])
-
+    
     var str = JSON.stringify(topics);
-    console.log(str)
     str = str.replace('"":', '"unknown":');
     topics=JSON.parse(str);
 
@@ -31,7 +33,6 @@ const Topics = () => {
         Object.entries(topics).slice(0, 10)
       );
     
-    console.log(top_ten)
 
 
     const data = {

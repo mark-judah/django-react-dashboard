@@ -5,26 +5,27 @@ import axios from "axios";
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-const Years = () => {
+const Years = (props) => {
     let [years, setYears] = useState([]);
     let labels = []
     let values = []
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/v1/dash/get-years')
-            .then(response => {
-                setYears(response.data)
-                console.log(response.data)
-            }).catch(error => {
-                console.log(error)
-            })
-
-    }, [])
+        if (props.data) {
+            setYears(props.data);
+        } else {
+            axios.get('http://localhost:8000/api/v1/dash/get-years')
+                .then(response => {
+                    setYears(response.data)
+                }).catch(error => {
+                    console.log(error)
+                })
+        }
+    }, [props.data]);
 
     var str = JSON.stringify(years);
-    console.log(str)
     str = str.replace('"":', '"unknown":');
-    years=JSON.parse(str);
+    years = JSON.parse(str);
 
     Object.entries(years).forEach(([key, value]) => {
         labels.push(key);
@@ -34,22 +35,22 @@ const Years = () => {
     const data = {
         labels: labels,
         datasets: [{
-          label:'Articles published',
-          data: values,
-          fill: false,
-          borderColor: 'rgb(90,30,0)',
-          tension: 0.1
+            label: 'Articles published',
+            data: values,
+            fill: false,
+            borderColor: 'rgb(90,30,0)',
+            tension: 0.1
         }]
-      };
+    };
 
     return (
         <div className="w-full h-96">
             <Line data={data}
                 style={{
-                    width:500,
+                    width: 500,
                 }}
-            
-                
+
+
             />
         </div>
 

@@ -3,24 +3,24 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ReactApexChart from "react-apexcharts";
 
-const Intensity = () => {
+const Intensity = (props) => {
     let [intensity, setIntensity] = useState([]);
     let data = []
     let options = {}
     useEffect(() => {
-        axios.get('http://localhost:8000/api/v1/dash/get-intensity')
-            .then(response => {
-                setIntensity(response.data)
-                console.log(response.data)
-            }).catch(error => {
-                console.log(error)
-            })
-
-    }, [])
+        if (props.data) {
+            setIntensity(props.data);
+        } else {
+            axios.get('http://localhost:8000/api/v1/dash/get-intensity')
+                .then(response => {
+                    setIntensity(response.data)
+                }).catch(error => {
+                    console.log(error)
+                })
+        }
+    }, [props.data]);
     data = intensity
     if (data.length > 0) {
-        console.log("not null" + data[0].title[0])
-
         options = {
             chart: {
                 height: 350,
@@ -74,8 +74,8 @@ const Intensity = () => {
                     return '<div class="text-wrap p-3 mt-2">' +
                         '<span class="text-red-400">' + 'Intensity: ' + series[seriesIndex][dataPointIndex] + '</span>' +
                         '<br>' +
-                        '<span>' + data[seriesIndex].title[dataPointIndex] + '</span>' 
-                        +'<br>' +
+                        '<span>' + data[seriesIndex].title[dataPointIndex] + '</span>'
+                        + '<br>' +
                         '<span>' + data[seriesIndex].year[dataPointIndex] + '</span>' +
                         '</div>'
                 }

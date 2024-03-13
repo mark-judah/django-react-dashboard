@@ -4,32 +4,35 @@ import axios from "axios";
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
-const SourcesRadar = () => {
+const SourcesRadar = (props) => {
     let [results, setResults] = useState([]);
-    let top_ten={}
+    let top_ten = {}
 
-    console.log('here')
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/v1/dash/get-likelihood-relevance-sources')
-            .then(response => {
-                setResults(response.data)
-                console.log(response)
-            }).catch(error => {
-                console.log(error)
-            })
+        if (props.data) {
+            console.log("props has data")
+            setResults(props.data);
+        } else {
+            console.log("props empty")
+            axios.get('http://localhost:8000/api/v1/dash/get-likelihood-relevance-sources')
+                .then(response => {
+                    setResults(response.data)
 
-    }, [])
+                }).catch(error => {
+                    console.log(error)
+                })
+        }
+    }, [props.data]);
 
 
-    top_ten=Object.fromEntries(
+    top_ten = Object.fromEntries(
         Object.entries(results).slice(0, 10)
-      );
+    );
 
-    console.log(top_ten)
-    let sources=[]
-    let average_likelihood=[]
-    let average_relevance=[]
+    let sources = []
+    let average_likelihood = []
+    let average_relevance = []
 
     Object.entries(top_ten).map(([key, value]) => (
         sources.push(value.source),
@@ -37,11 +40,10 @@ const SourcesRadar = () => {
         average_relevance.push(value.average_relevance)
 
     ))
-    console.log(sources)
 
     const data = {
-        labels:sources,
-          datasets: [{
+        labels: sources,
+        datasets: [{
             label: 'Relevance',
             data: average_relevance,
             fill: true,
@@ -51,7 +53,7 @@ const SourcesRadar = () => {
             pointBorderColor: '#fff',
             pointHoverBackgroundColor: '#fff',
             pointHoverBorderColor: 'rgb(90,30,0)'
-          }, {
+        }, {
             label: 'Likelihood',
             data: average_likelihood,
             fill: true,
@@ -61,7 +63,7 @@ const SourcesRadar = () => {
             pointBorderColor: '#fff',
             pointHoverBackgroundColor: '#fff',
             pointHoverBorderColor: 'rgb(254,191,159)'
-          }]
+        }]
     };
 
 
@@ -79,7 +81,7 @@ const SourcesRadar = () => {
                             display: true
                         }
                     },
-                 
+
                 }}
             />
         </div>
